@@ -1,33 +1,98 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# Imports
 
-library(shiny)
+packages = c('shiny','shinythemes','leaflet')
+for (p in packages){
+    library(p,character.only = T)
+}
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot")
-        )
+testSliderUI <- sidebarLayout(
+    sidebarPanel(
+        sliderInput("bins",
+                    "Number of bins:",
+                    min = 1,
+                    max = 50,
+                    value = 30)
+    ),
+    mainPanel(
+        plotOutput("distPlot")
     )
+)
+
+
+kernelDensityUI <- sidebarLayout(
+    sidebarPanel(
+        sliderInput("kernelDensitySliderYear",
+                    "Year:",
+                    min = 2010,
+                    max = 2020,
+                    value = 2010,
+                    ticks = F
+        ),
+        sliderInput("kernelDensitySliderMonth",
+                    "Month:",
+                    min = 1,
+                    max = 12,
+                    value = 1,
+                    ticks = F
+                    
+        ),
+        checkboxGroupInput("kernelDensityCheckboxSubzone", 
+                           "Regions:",
+                           c("CENTRAL REGION", "WEST REGION", "EAST REGION", "NORTH REGION")
+        ),
+    ),
+    mainPanel(
+        leafletOutput("kernelDensityMap")
+    )
+)
+
+spatPointUI <- sidebarLayout(
+    sidebarPanel(
+        dateInput("spatPointDateInputStart",
+                    "Start Date:"
+        ),
+        dateInput("spatPointDateInputEnd",
+                  "End Date:"
+        ),
+        checkboxGroupInput("kernelDensityCheckboxSubzone", 
+                           "Regions:",
+                           c("CENTRAL REGION", "WEST REGION", "EAST REGION", "NORTH REGION")
+        ),
+    ),
+    mainPanel(
+        leafletOutput("spatPointMap")
+    )
+)
+
+accessibilityUI <- sidebarLayout(
+    sidebarPanel(
+        sliderInput("accessibiltyMetersSlider",
+                    "Year:",
+                    min = 50,
+                    max = 2500,
+                    value = 100,
+                    ticks = F
+        ),
+        checkboxGroupInput("kernelDensityCheckboxSubzone", 
+                           "Amenity Type:",
+                           c("Eateries", "Gyms", "Parks")
+        ),
+    ),
+    mainPanel(
+        leafletOutput("accessibilityMap")
+    )
+)
+
+
+shinyUI(navbarPage(
+    "HealthHeroes",
+    theme = shinytheme("yeti"),
+    tabPanel(title = "Overview", value = "overview", testSliderUI),
+    tabPanel(title = "Kernel Density Analysis", value = "kernelDensity", kernelDensityUI),
+    tabPanel(title = "Spatial Point Pattern Analysis", value = "spatPoint", spatPointUI),
+    tabPanel(title = "Accessibility Analysis", value = "accessibility", accessibilityUI)
 ))
+
+
+
