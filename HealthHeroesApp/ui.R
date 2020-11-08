@@ -1,11 +1,14 @@
-# Imports
-
+# IMPORTS
+#===================================================================================================
 packages = c('shiny','shinythemes','leaflet')
 for (p in packages){
     library(p,character.only = T)
 }
+#===================================================================================================
 
 
+# SAMPLE
+#===================================================================================================
 testSliderUI <- sidebarLayout(
     sidebarPanel(
         sliderInput("bins",
@@ -18,35 +21,66 @@ testSliderUI <- sidebarLayout(
         plotOutput("distPlot")
     )
 )
+#===================================================================================================
 
 
+# KERNEL DENSITY
+#===================================================================================================
 kernelDensityUI <- sidebarLayout(
     sidebarPanel(
-        sliderInput("kernelDensitySliderYear",
-                    "Year:",
-                    min = 2010,
-                    max = 2020,
-                    value = 2010,
-                    ticks = F
+        selectInput("kernelDensitySelectAmenity", 
+                    "Amenity Type:",
+                    c("Gyms" = "gym",
+                      "Eateries" = "eat",
+                      "Places" = "places")
         ),
-        sliderInput("kernelDensitySliderMonth",
-                    "Month:",
-                    min = 1,
-                    max = 12,
-                    value = 1,
-                    ticks = F
-                    
+        selectInput("kernelDensitySelectRegion", 
+                    "Region:",
+                    c("All Regions" = "all",
+                      "Central Region" = "CENTRAL REGION",
+                      "West Region" = "WEST REGION",
+                      "East Region" = "EAST REGION",
+                      "North-East Region" = "NORTH-EAST REGION",
+                      "North Region" = "NORTH REGION")
         ),
-        checkboxGroupInput("kernelDensityCheckboxSubzone", 
-                           "Regions:",
-                           c("CENTRAL REGION", "WEST REGION", "EAST REGION", "NORTH REGION")
+        selectInput("kernelDensitySelectBandwidth", 
+                    "Selected Bandwidth:",
+                    c("Manual (Fastest)" = "manual",
+                      "Adaptive" = "adaptive",
+                      "bw.diggle" = "bw.diggle",
+                      "bw.scott" = "bw.scott",
+                      "bw.ppl" = "bw.ppl")
         ),
+        conditionalPanel(
+            condition = "input.kernelDensitySelectBandwidth == 'manual'",
+            sliderInput("kernelDensitySliderBandwidth",
+                        "Bandwidth",
+                        min = 100,
+                        max = 1000,
+                        value = 600,
+                        ticks = F
+            ),  
+        ),
+        conditionalPanel(
+            condition = "input.kernelDensitySelectBandwidth != 'adaptive'",
+            selectInput("kernelDensitySelectKernelMethod", 
+                        "Kernel Method:",
+                        c("Gaussian" = "gaussian",
+                          "Epanechnikov" = "epanechnikov",
+                          "Quartic" = "quartic",
+                          "Disc"="disc")
+            )
+        )
     ),
     mainPanel(
         leafletOutput("kernelDensityMap")
     )
 )
+#===================================================================================================
 
+
+# SPATIAL POINT
+#===================================================================================================
 spatPointUI <- sidebarLayout(
     sidebarPanel(
         dateInput("spatPointDateInputStart",
@@ -55,16 +89,16 @@ spatPointUI <- sidebarLayout(
         dateInput("spatPointDateInputEnd",
                   "End Date:"
         ),
-        checkboxGroupInput("kernelDensityCheckboxSubzone", 
-                           "Regions:",
-                           c("CENTRAL REGION", "WEST REGION", "EAST REGION", "NORTH REGION")
-        ),
     ),
     mainPanel(
         leafletOutput("spatPointMap")
     )
 )
+#===================================================================================================
 
+
+# ACCESSIBILITY
+#===================================================================================================
 accessibilityUI <- sidebarLayout(
     sidebarPanel(
         sliderInput("accessibiltyMetersSlider",
@@ -74,17 +108,18 @@ accessibilityUI <- sidebarLayout(
                     value = 100,
                     ticks = F
         ),
-        checkboxGroupInput("kernelDensityCheckboxSubzone", 
-                           "Amenity Type:",
-                           c("Eateries", "Gyms", "Parks")
-        ),
     ),
     mainPanel(
         leafletOutput("accessibilityMap")
     )
 )
+#===================================================================================================
 
 
+
+
+# MAIN
+#===================================================================================================
 shinyUI(navbarPage(
     "HealthHeroes",
     theme = shinytheme("yeti"),
@@ -93,6 +128,6 @@ shinyUI(navbarPage(
     tabPanel(title = "Spatial Point Pattern Analysis", value = "spatPoint", spatPointUI),
     tabPanel(title = "Accessibility Analysis", value = "accessibility", accessibilityUI)
 ))
-
+#===================================================================================================
 
 
