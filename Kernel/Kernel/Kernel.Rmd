@@ -19,7 +19,7 @@ for (p in packages){
   library(p,character.only = T)
 }
 
-```
+```   
 
 
 ```{r}
@@ -50,7 +50,6 @@ gym_sp <- as(gym, "SpatialPoints")
 gym_ppp <- as(gym_sp, "ppp")
 gym_ppp <- rjitter(gym_ppp, retry=TRUE, nsim=1, drop=TRUE)
 gymSG_ppp <- gym_ppp[sg_owin]
-
 ```
 
 ```{r}
@@ -85,21 +84,6 @@ plot(kde_gymSG.ppl, main = "bw.ppl")
 
 ```
 
-```{r}
-par(mfrow=c(1,2))
-plot(density(gymSG_ppp.km, sigma=bw.ppl, edge=TRUE, kernel="gaussian"), main="Gaussian")
-plot(density(gymSG_ppp.km, sigma=bw.ppl, edge=TRUE, kernel="epanechnikov"), main="Epanechnikov")
-
-
-```
-
-```{r}
-par(mfrow=c(1,2))
-plot(density(gymSG_ppp.km, sigma=bw.ppl, edge=TRUE, kernel="quartic"), main="Quartic")
-plot(density(gymSG_ppp.km, sigma=bw.ppl, edge=TRUE, kernel="disc"), main="Disc")
-
-
-```
 Computing kernel density estimation by defining bandwidth manually
 
 ```{r}
@@ -108,6 +92,7 @@ kde_gymSG_600 <- density(gymSG_ppp.km, sigma=0.6, edge=TRUE, kernel="gaussian")
 plot(kde_gymSG_600)
 
 ```
+
 Computing kernel density estimation by using adaptive bandwidth
 ```{r}
 
@@ -115,6 +100,7 @@ kde_gymSG_adaptive <- adaptive.density(gymSG_ppp.km, method="kernel")
 plot(kde_gymSG_adaptive)
 
 ```
+
 ```{r}
 par(mfrow=c(1,2))
 plot(kde_gymSG.bw, main = "Fixed bandwidth")
@@ -145,11 +131,7 @@ tm_shape(kde_gymSG_bw_raster) +
 
 2.Healthier eateries
 ```{r}
-#filter the fastfood
 eat_sp <- as(eat, "SpatialPoints")
-#eat <- eat_sp %>%
-#  filter(!grepl("McDonald"), Name)
-
 ```
 
 ```{r}
@@ -258,14 +240,16 @@ tm_shape(kde_eatSG_bw_raster) +
 
 3.places series
 
+```{r}
+plot(places)
+```
 
 ```{r}
 sg_sp <- as(sg, "SpatialPolygons")
 sg_owin <- as(sg_sp, "owin")
 
-places_sp <- SpatialPoints(places)
+places_sp <- as(places, "SpatialPoints")
 
-#places_sp <- as(places, "Spatialplacess")
 places_ppp <- as(places_sp, "ppp")
 places_ppp <- rjitter(places_ppp, retry=TRUE, nsim=1, drop=TRUE)
 placesSG_ppp <- places_ppp[sg_owin]
