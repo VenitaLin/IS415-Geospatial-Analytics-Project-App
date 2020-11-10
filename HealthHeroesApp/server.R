@@ -21,8 +21,10 @@ sg_sp <- as(sg, "SpatialPolygons")
 
 # MPSZ
 #===================================================================================================
-mpsz <- readOGR(dsn = "data/geospatial/master-plan-2014-boundary",
-                layer = "MP14_SUBZONE_WEB_PL")
+mpsz <- readRDS("data/rds/mpsz.RDS")
+# mpsz <- readOGR(dsn = "data/geospatial/master-plan-2014-boundary",
+#                 layer = "MP14_SUBZONE_WEB_PL")
+# save(mpsz, file="data/rds/mpsz.RDS")
 #===================================================================================================
 
 
@@ -40,7 +42,6 @@ gym_ppp <- rjitter(gym_ppp, retry=TRUE, nsim=1, drop=TRUE)
 
 # EATERIES
 #===================================================================================================
-
 eat <- readOGR(dsn = "data/geospatial/healthier-eateries/healthier-eateries.shp",
                layer = "healthier-eateries")
 
@@ -48,7 +49,6 @@ eat_sp <- as(eat, "SpatialPoints")
 
 eat_ppp <- as(eat_sp, "ppp")
 eat_ppp <- rjitter(eat_ppp, retry=TRUE, nsim=1, drop=TRUE)
-
 #===================================================================================================
 
 
@@ -75,23 +75,19 @@ places_ppp <- rjitter(places_ppp, retry=TRUE, nsim=1, drop=TRUE)
 #===================================================================================================
 
 shinyServer(function(input, output, session) {
+
     
-    # SAMPLE
-    #===============================================================================================
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    updateSelectInput(session, "secondOrderSelectPlanningArea",
+                      choices = sort(unique(mpsz$PLN_AREA_N))
+                      )
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-    })
-    #===============================================================================================
-
+        
     # KERNEL DENSITY
     #===============================================================================================
-    output$kernelDensityMap <- renderLeaflet({
-
+    output$kernelDensityMap <- 
+        
+        renderPlot({
+        # renderLeaflet({
 
         # SELECT REGION
         #===========================================================================================
@@ -145,26 +141,119 @@ shinyServer(function(input, output, session) {
 
                 
         gridded_kde <- as.SpatialGridDataFrame.im(kde)
-        kde_raster <- raster(gridded_kde)
-
-        kernelDensityMap <- 
-            tm_shape(kde_raster) + 
-            tm_raster("v") 
-        tmap_leaflet(kernelDensityMap)
+        
+        spplot(gridded_kde)
+        
+        # kde_raster <- raster(gridded_kde)
+        
+        #         crs(kde_raster) <- "+proj=tmerc +lat_0=1.36666666666667 +lon_0=103.833333333333 +k=1 +x_0=28001.642
+        # +y_0=38744.572 +datum=WGS84 +units=m +no_defs"
+        
+        # kernelDensityMap <- 
+        #     tm_shape(kde_raster) +
+        #         tm_raster("v")
+            
+        # tmap_leaflet(kernelDensityMap)
         
         
     })
     #===============================================================================================
 
-    # SPATIAL POINT
+    
+    
+    
+    # 2ND ORDER
     #===============================================================================================
-    output$spatPointMap <- renderLeaflet({
-        # spatPointMap <- tm_shape(mpsz)
-        spatPointMap <- qtm(mpsz)
-        tmap_leaflet(spatPointMap)
+    
+    output$secondOrderEstimationPlot <- renderPlot({
+        
+        # SELECT PLANNING AREA
+        #===========================================================================================
+        area <- mpsz[mpsz@data$PLN_AREA_N == input$secondOrderSelectPlanningArea,]
+        area_sp <- as(area, "SpatialPolygons")
+        selected_owin <- as(area_sp, "owin")
+        #===========================================================================================
+        
+        # SELECT AMENITY
+        #===========================================================================================
+        if (input$secondOrderSelectAmenity == "gym") { 
+            ppp_selected <- rescale(gym_ppp[selected_owin], 1000, "km")
+        } 
+        else if (input$secondOrderSelectAmenity == "eat") { 
+            ppp_selected <- rescale(eat_ppp[selected_owin], 1000, "km")
+        }
+        else if (input$secondOrderSelectAmenity == "places") { 
+            ppp_selected <- rescale(places_ppp[selected_owin], 1000, "km")
+        }
+        #===========================================================================================
+        
+        # SELECT FUNCTION
+        #===========================================================================================
+        if (input$secondOrderSelectFunction == "G") {
+            G_ppp = Gest(ppp_selected, correction = "border")
+            plot(G_ppp)
+        }
+        else if (input$secondOrderSelectFunction == "F") {
+            F_ppp = Fest(ppp_selected)
+            plot(F_ppp)
+        }
+        else if (input$secondOrderSelectFunction == "K") {
+            K_ppp = Kest(ppp_selected, correction = "Ripley")
+            plot(K_ppp, . -r ~ r, ylab= "K(d)-r", xlab = "d(m)")
+        }
+        else if (input$secondOrderSelectFunction == "L") {
+            L_ppp = Lest(ppp_selected, correction = "Ripley")
+            plot(L_ppp, . -r ~ r, ylab= "L(d)-r", xlab = "d(m)")
+        }
+        #===========================================================================================
+        
+    })
+    
+    output$secondOrderCompleteSpatRandPlot <- renderPlot({
+        
+        # SELECT PLANNING AREA
+        #===========================================================================================
+        area <- mpsz[mpsz@data$PLN_AREA_N == input$secondOrderSelectPlanningArea,]
+        area_sp <- as(area, "SpatialPolygons")
+        selected_owin <- as(area_sp, "owin")
+        #===========================================================================================
+        
+        # SELECT AMENITY
+        #===========================================================================================
+        if (input$secondOrderSelectAmenity == "gym") { 
+            ppp_selected <- rescale(gym_ppp[selected_owin], 1000, "km")
+        } 
+        else if (input$secondOrderSelectAmenity == "eat") { 
+            ppp_selected <- rescale(eat_ppp[selected_owin], 1000, "km")
+        }
+        else if (input$secondOrderSelectAmenity == "places") { 
+            ppp_selected <- rescale(places_ppp[selected_owin], 1000, "km")
+        }
+        #===========================================================================================
+        
+        # SELECT FUNCTION
+        #===========================================================================================
+        if (input$secondOrderSelectFunction == "G") {
+            G_ppp.csr <- envelope(ppp_selected, Gest, correction = "all", nsim = 999)
+            plot(G_ppp.csr)
+        }
+        else if (input$secondOrderSelectFunction == "F") {
+            F_ppp.csr <- envelope(ppp_selected, Fest, nsim = 999)
+            plot(F_ppp.csr)
+        }
+        else if (input$secondOrderSelectFunction == "K") {
+            K_ppp.csr <- envelope(ppp_selected, Kest, nsim = 99, rank = 1, glocal=TRUE)
+            plot(K_ppp.csr, . - r ~ r, xlab="d", ylab="K(d)-r")
+        }
+        else if (input$secondOrderSelectFunction == "L") {
+            L_ppp.csr <- envelope(childcare_ck_ppp, Lest, nsim = 99, rank = 1, glocal=TRUE)
+            plot(L_ppp.csr, . - r ~ r, xlab="d", ylab="L(d)-r")
+        }
+        #===========================================================================================
     })
     #===============================================================================================
-
+    
+    
     
     # ACCESSIBILITY
     #===============================================================================================
@@ -176,5 +265,3 @@ shinyServer(function(input, output, session) {
     #===============================================================================================
 
 })
-
-#===================================================================================================

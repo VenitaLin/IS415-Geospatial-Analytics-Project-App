@@ -1,26 +1,9 @@
 # IMPORTS
 #===================================================================================================
-packages = c('shiny','shinythemes','leaflet')
+packages = c('shiny','shinythemes','leaflet','shinycssloaders')
 for (p in packages){
     library(p,character.only = T)
 }
-#===================================================================================================
-
-
-# SAMPLE
-#===================================================================================================
-testSliderUI <- sidebarLayout(
-    sidebarPanel(
-        sliderInput("bins",
-                    "Number of bins:",
-                    min = 1,
-                    max = 50,
-                    value = 30)
-    ),
-    mainPanel(
-        plotOutput("distPlot")
-    )
-)
 #===================================================================================================
 
 
@@ -73,25 +56,39 @@ kernelDensityUI <- sidebarLayout(
         )
     ),
     mainPanel(
-        leafletOutput("kernelDensityMap")
+        plotOutput("kernelDensityMap") %>% withSpinner(color="#0dc5c1")
     )
 )
 #===================================================================================================
 
 
-# SPATIAL POINT
+# SECOND ORDER
 #===================================================================================================
-spatPointUI <- sidebarLayout(
+secondOrderUI <- sidebarLayout(
     sidebarPanel(
-        dateInput("spatPointDateInputStart",
-                    "Start Date:"
+        selectInput("secondOrderSelectAmenity", 
+                    "Amenity Type:",
+                    c("Gyms" = "gym",
+                      "Eateries" = "eat",
+                      "Places" = "places")
         ),
-        dateInput("spatPointDateInputEnd",
-                  "End Date:"
+        selectInput("secondOrderSelectPlanningArea", 
+                    "Planning Area:",
+                    c("Loading..." = "ANG MO KIO") # Placeholder
         ),
+        selectInput("secondOrderSelectFunction", 
+                    "Function:",
+                    c("G-Function" = "G",
+                      "F-Function" = "F",
+                      "K-Function" = "K",
+                      "L-Function" = "L")
+        )
     ),
     mainPanel(
-        leafletOutput("spatPointMap")
+        tabsetPanel(type = "tabs",
+                    tabPanel("Function Estimation", plotOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
+                    tabPanel("Complete Spatial Randomness Test", plotOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
+        )
     )
 )
 #===================================================================================================
@@ -123,9 +120,8 @@ accessibilityUI <- sidebarLayout(
 shinyUI(navbarPage(
     "HealthHeroes",
     theme = shinytheme("yeti"),
-    tabPanel(title = "Overview", value = "overview", testSliderUI),
-    tabPanel(title = "Kernel Density Analysis", value = "kernelDensity", kernelDensityUI),
-    tabPanel(title = "Spatial Point Pattern Analysis", value = "spatPoint", spatPointUI),
+    tabPanel(title = "First Order (Kernel Density) Analysis", value = "kernelDensity", kernelDensityUI),
+    tabPanel(title = "Second Order Analysis", value = "secondOrder", secondOrderUI),
     tabPanel(title = "Accessibility Analysis", value = "accessibility", accessibilityUI)
 ))
 #===================================================================================================
