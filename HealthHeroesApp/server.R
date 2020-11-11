@@ -1,8 +1,8 @@
 # IMPORTS
 #===================================================================================================
-packages = c('rgdal', 'sf', 'spdep', 'tmap', 
-             'tidyverse', 'maptools', 'raster', 
-             'spatstat', 'shiny','leaflet', 'spData'
+packages = c('rgdal', 'sf', 'spdep', 'tmap', 'dplyr',
+             'tidyverse', 'maptools', 'raster', 'broom',
+             'spatstat', 'shiny','leaflet', 'spData', 'DT'
              )
 for (p in packages){
     library(p,character.only = T)
@@ -33,6 +33,11 @@ mpsz <- readRDS("data/rds/mpsz.RDS")
 #===================================================================================================
 gym <- readOGR(dsn = "data/geospatial/gymssg/gyms-sg.shp", layer = "gyms-sg")
 
+gym <- gym[ , !(names(gym) %in% c("descriptio", "timestamp", "begin", "end", "altitudeMo", 
+                                  "drawOrder", "icon", "HYPERLINK", "PHOTOURL", "snippet", "tessellate",
+                                  "extrude", "visibility", "LANDYADDRE", "LANDXADDRE", "ADDRESSTYP", "ADDRESSFLO", 
+                                  "INC_CRC", "FMEL_UPD_D", "ADDRESSUNI"))]
+
 gym_sp <- as(gym, "SpatialPoints")
 
 gym_ppp <- as(gym_sp, "ppp")
@@ -44,6 +49,13 @@ gym_ppp <- rjitter(gym_ppp, retry=TRUE, nsim=1, drop=TRUE)
 #===================================================================================================
 eat <- readOGR(dsn = "data/geospatial/healthier-eateries/healthier-eateries.shp",
                layer = "healthier-eateries")
+
+eat <- eat[ , !(names(eat) %in% c("descriptio", "timestamp", "begin", "end", "altitudeMo", 
+                                  "drawOrder", "icon", "HYPERLINK", "PHOTOURL", "snippet", "tessellate",
+                                  "extrude", "visibility", "LANDYADDRE", "LANDXADDR"))]
+eat <- eat[!grepl("McDonald's", eat$Name),]
+eat <- eat[!grepl("Mcdonald's", eat$Name),]
+eat <- eat[!grepl("KOI", eat$Name),]
 
 eat_sp <- as(eat, "SpatialPoints")
 
@@ -57,6 +69,9 @@ eat_ppp <- rjitter(eat_ppp, retry=TRUE, nsim=1, drop=TRUE)
 #===================================================================================================
 places <- readOGR(dsn = "data/geospatial/Singapore-shp/shape/places.shp",
                   layer = "places")
+
+print(summary(places))
+# print(unique(places$Name))
 
 places_sp <- as(places, "SpatialPoints")
 places_sp <- spTransform(places_sp, crs(eat_sp))
@@ -78,10 +93,64 @@ shinyServer(function(input, output, session) {
 
     
     updateSelectInput(session, "secondOrderSelectPlanningArea",
-                      choices = sort(unique(mpsz$PLN_AREA_N))
-                      )
+                      choices = sort(unique(mpsz$PLN_AREA_N)))
 
+    
+    # SUMMARY
+    #===============================================================================================
+    output$summaryDataTable <- renderDataTable(datatable({
         
+        # SELECT AMENITY
+        #===========================================================================================
+        if (input$summaryPointSelectAmenity == "gym") { as.data.frame(gym) } 
+        else if (input$summaryPointSelectAmenity == "eat") { as.data.frame(eat) }
+        else if (input$summaryPointSelectAmenity == "places") { as.data.frame(places) }
+        #===========================================================================================
+        
+    }))
+    
+    output$summaryPointMap <- renderLeaflet({
+        
+        # SELECT AMENITY
+        #===========================================================================================
+        if (input$summaryPointSelectAmenity == "gym") { 
+            pointsToShow <- gym
+            pointColor <- "red"
+        } 
+        else if (input$summaryPointSelectAmenity == "eat") { 
+            pointsToShow <- eat
+            pointColor <- "blue" 
+        }
+        else if (input$summaryPointSelectAmenity == "places") { 
+            pointsToShow <- places
+            pointColor <- "green" 
+        }
+        #===========================================================================================
+        
+         summaryPointMap <-
+             tm_shape(mpsz) +
+                tm_polygons() +
+                tm_facets("REGION_N",
+                          as.layers = T) +
+             
+             tm_shape(pointsToShow) +
+                tm_bubbles(col=pointColor, size=0.15, border.col="black", border.lwd=1)
+             
+         tmap_leaflet(summaryPointMap)
+        
+    })
+    #===============================================================================================
+    
+    
+    # CHOROPLETH
+    #===============================================================================================
+    output$choroplethMap <- renderLeaflet({
+        choroplethMap <- qtm(mpsz)
+        tmap_leaflet(choroplethMap)
+    })
+    #===============================================================================================
+    
+    
     # KERNEL DENSITY
     #===============================================================================================
     output$kernelDensityMap <- 
@@ -155,7 +224,54 @@ shinyServer(function(input, output, session) {
             
         # tmap_leaflet(kernelDensityMap)
         
+    })
+    
+    output$kernelDensityClarkEvans <- renderTable({
         
+        # SELECT REGION
+        #===========================================================================================
+        if (input$kernelDensitySelectRegion == "all") {
+            selected_owin <- as(sg_sp, "owin")
+        } 
+        else {
+            region <- mpsz[mpsz@data$REGION_N == input$kernelDensitySelectRegion,]
+            region_sp <- as(region, "SpatialPolygons")
+            selected_owin <- as(region_sp, "owin")   
+        }
+        #===========================================================================================
+        
+        
+        # SELECT AMENITY
+        #===========================================================================================
+        if (input$kernelDensitySelectAmenity == "gym") { 
+            ppp_selected <- gym_ppp[selected_owin]
+        } 
+        else if (input$kernelDensitySelectAmenity == "eat") { 
+            ppp_selected <- eat_ppp[selected_owin]
+        }
+        else if (input$kernelDensitySelectAmenity == "places") { 
+            ppp_selected <- places_ppp[selected_owin]
+        }
+        #===========================================================================================
+        
+        if (input$kernelDensitySelectRegion == "all") {
+            clarkevans_res <- clarkevans.test(ppp_selected,
+                                              correction="none",
+                                              clipregion=selected_owin,
+                                              alternative=c("two.sided"),
+                                              nsim=999)
+        } 
+        else {
+            clarkevans_res <- clarkevans.test(ppp_selected,
+                                              correction="none",
+                                              clipregion=NULL,
+                                              alternative=c("two.sided"),
+                                              nsim=999)
+        }
+        
+
+        
+        tidy(clarkevans_res)        
     })
     #===============================================================================================
 
