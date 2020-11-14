@@ -1,0 +1,12 @@
+name: HealthHeroesApp
+title: HealthHeroesApp
+username:
+account: wynlo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3216656
+bundleId: 3851913
+url: https://wynlo.shinyapps.io/HealthHeroesApp/
+when: 1605185538.19045
+asMultiple: FALSE
+asStatic: FALSE

@@ -1,9 +1,11 @@
 # IMPORTS
 #===================================================================================================
-packages = c('shiny','shinythemes','leaflet','shinycssloaders','DT')
-for (p in packages){
-    library(p,character.only = T)
-}
+library('shiny')
+library('shinythemes')
+library('leaflet')
+library('shinycssloaders')
+library('DT')
+library('plotly')
 #===================================================================================================
 
 # SUMMARY
@@ -69,19 +71,16 @@ kernelDensityUI <- sidebarLayout(
                       "North-East Region" = "NORTH-EAST REGION",
                       "North Region" = "NORTH REGION")
         ),
-        conditionalPanel(
-            condition = "input.tabselected == 1",
-            selectInput("kernelDensitySelectBandwidth", 
-                        "Selected Bandwidth:",
-                        c("Manual (Fastest)" = "manual",
-                          "Adaptive" = "adaptive",
-                          "bw.diggle" = "bw.diggle",
-                          "bw.scott" = "bw.scott",
-                          "bw.ppl" = "bw.ppl")
-            ),
+        selectInput("kernelDensitySelectBandwidth", 
+                    "Selected Bandwidth:",
+                    c("Manual (Fastest)" = "manual",
+                      "Adaptive" = "adaptive",
+                      "bw.diggle" = "bw.diggle",
+                      "bw.scott" = "bw.scott",
+                      "bw.ppl" = "bw.ppl")
         ),
         conditionalPanel(
-            condition = "input.kernelDensitySelectBandwidth == 'manual' && input.tabselected == 1",
+            condition = "input.kernelDensitySelectBandwidth == 'manual'",
             sliderInput("kernelDensitySliderBandwidth",
                         "Bandwidth",
                         min = 100,
@@ -91,7 +90,7 @@ kernelDensityUI <- sidebarLayout(
             ),  
         ),
         conditionalPanel(
-            condition = "input.kernelDensitySelectBandwidth != 'adaptive' && input.tabselected == 1",
+            condition = "input.kernelDensitySelectBandwidth != 'adaptive'",
             selectInput("kernelDensitySelectKernelMethod", 
                         "Kernel Method:",
                         c("Gaussian" = "gaussian",
@@ -102,12 +101,7 @@ kernelDensityUI <- sidebarLayout(
         )
     ),
     mainPanel(
-        tabsetPanel(type = "tabs",
-                    id = "tabselected",
-                    # tabPanel("Kernel Density Map", leafletOutput("kernelDensityMap") %>% withSpinner(color="#0dc5c1")),
-                    tabPanel("Kernel Density Map", value=1, plotOutput("kernelDensityMap") %>% withSpinner(color="#0dc5c1")),
-                    tabPanel("Clark-Evans Test (Takes a while)", value=2, tableOutput("kernelDensityClarkEvans") %>% withSpinner(color="#0dc5c1"))
-        )
+        plotOutput("kernelDensityMap") %>% withSpinner(color="#0dc5c1")
     )
 )
 #===================================================================================================
@@ -133,12 +127,36 @@ secondOrderUI <- sidebarLayout(
                       "F-Function" = "F",
                       "K-Function" = "K",
                       "L-Function" = "L")
-        )
+        ),
+        conditionalPanel(
+            condition = "input.tabselected == 'secondOrderUITab2'",
+            conditionalPanel(
+                condition = "input.secondOrderSelectFunction == 'G' || input.secondOrderSelectFunction == 'F'",
+                sliderInput("secondOrderSliderNsim_1",
+                            "Number of Simulations",
+                            min = 10,
+                            max = 999,
+                            value = 10,
+                            ticks = F
+                )
+            ),
+            conditionalPanel(
+                condition = "input.secondOrderSelectFunction == 'K' || input.secondOrderSelectFunction == 'L'",
+                sliderInput("secondOrderSliderNsim_2",
+                            "Number of Simulations",
+                            min = 10,
+                            max = 99,
+                            value = 10,
+                            ticks = F
+                )
+            )  
+        ),
     ),
     mainPanel(
         tabsetPanel(type = "tabs",
-                    tabPanel("Function Estimation", plotOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
-                    tabPanel("Complete Spatial Randomness Test (Takes a while)", plotOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
+                    id = "tabselected",
+                    tabPanel("Function Estimation", value="secondOrderUITab1", plotOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
+                    tabPanel("Complete Spatial Randomness Test (Takes a while)", value="secondOrderUITab2", plotOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
         )
     )
 )
@@ -154,7 +172,7 @@ accessibilityUI <- sidebarLayout(
                     min = 50,
                     max = 2500,
                     value = 100,
-                    ticks = F
+                    ticks = T
         ),
     ),
     mainPanel(

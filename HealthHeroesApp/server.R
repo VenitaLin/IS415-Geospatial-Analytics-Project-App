@@ -1,12 +1,19 @@
 # IMPORTS
 #===================================================================================================
-packages = c('rgdal', 'sf', 'spdep', 'tmap', 'dplyr',
-             'tidyverse', 'maptools', 'raster', 'broom',
-             'spatstat', 'shiny','leaflet', 'spData', 'DT'
-             )
-for (p in packages){
-    library(p,character.only = T)
-}
+library('rgdal')
+library('sf')
+library('spdep')
+library('tmap')
+library('dplyr')
+library('tidyverse')
+library('maptools')
+library('raster')
+library('broom')
+library('spatstat')
+library('shiny')
+library('leaflet')
+library('spData')
+library('DT')
 #===================================================================================================
 
 
@@ -207,72 +214,10 @@ shinyServer(function(input, output, session) {
                            sigma=bw.ppl, edge=TRUE, kernel=input$kernelDensitySelectKernelMethod) 
         }
         #===========================================================================================
-
-                
         gridded_kde <- as.SpatialGridDataFrame.im(kde)
-        
         spplot(gridded_kde)
-        
-        # kde_raster <- raster(gridded_kde)
-        
-        #         crs(kde_raster) <- "+proj=tmerc +lat_0=1.36666666666667 +lon_0=103.833333333333 +k=1 +x_0=28001.642
-        # +y_0=38744.572 +datum=WGS84 +units=m +no_defs"
-        
-        # kernelDensityMap <- 
-        #     tm_shape(kde_raster) +
-        #         tm_raster("v")
-            
-        # tmap_leaflet(kernelDensityMap)
-        
     })
     
-    output$kernelDensityClarkEvans <- renderTable({
-        
-        # SELECT REGION
-        #===========================================================================================
-        if (input$kernelDensitySelectRegion == "all") {
-            selected_owin <- as(sg_sp, "owin")
-        } 
-        else {
-            region <- mpsz[mpsz@data$REGION_N == input$kernelDensitySelectRegion,]
-            region_sp <- as(region, "SpatialPolygons")
-            selected_owin <- as(region_sp, "owin")   
-        }
-        #===========================================================================================
-        
-        
-        # SELECT AMENITY
-        #===========================================================================================
-        if (input$kernelDensitySelectAmenity == "gym") { 
-            ppp_selected <- gym_ppp[selected_owin]
-        } 
-        else if (input$kernelDensitySelectAmenity == "eat") { 
-            ppp_selected <- eat_ppp[selected_owin]
-        }
-        else if (input$kernelDensitySelectAmenity == "places") { 
-            ppp_selected <- places_ppp[selected_owin]
-        }
-        #===========================================================================================
-        
-        if (input$kernelDensitySelectRegion == "all") {
-            clarkevans_res <- clarkevans.test(ppp_selected,
-                                              correction="none",
-                                              clipregion=selected_owin,
-                                              alternative=c("two.sided"),
-                                              nsim=999)
-        } 
-        else {
-            clarkevans_res <- clarkevans.test(ppp_selected,
-                                              correction="none",
-                                              clipregion=NULL,
-                                              alternative=c("two.sided"),
-                                              nsim=999)
-        }
-        
-
-        
-        tidy(clarkevans_res)        
-    })
     #===============================================================================================
 
     
@@ -308,6 +253,7 @@ shinyServer(function(input, output, session) {
         if (input$secondOrderSelectFunction == "G") {
             G_ppp = Gest(ppp_selected, correction = "border")
             plot(G_ppp)
+            
         }
         else if (input$secondOrderSelectFunction == "F") {
             F_ppp = Fest(ppp_selected)
@@ -350,19 +296,19 @@ shinyServer(function(input, output, session) {
         # SELECT FUNCTION
         #===========================================================================================
         if (input$secondOrderSelectFunction == "G") {
-            G_ppp.csr <- envelope(ppp_selected, Gest, correction = "all", nsim = 999)
+            G_ppp.csr <- envelope(ppp_selected, Gest, correction = "all", nsim = input$secondOrderSliderNsim_1)
             plot(G_ppp.csr)
         }
         else if (input$secondOrderSelectFunction == "F") {
-            F_ppp.csr <- envelope(ppp_selected, Fest, nsim = 999)
+            F_ppp.csr <- envelope(ppp_selected, Fest, nsim = input$secondOrderSliderNsim_1)
             plot(F_ppp.csr)
         }
         else if (input$secondOrderSelectFunction == "K") {
-            K_ppp.csr <- envelope(ppp_selected, Kest, nsim = 99, rank = 1, glocal=TRUE)
+            K_ppp.csr <- envelope(ppp_selected, Kest, nsim = input$secondOrderSliderNsim_2, rank = 1, glocal=TRUE)
             plot(K_ppp.csr, . - r ~ r, xlab="d", ylab="K(d)-r")
         }
         else if (input$secondOrderSelectFunction == "L") {
-            L_ppp.csr <- envelope(childcare_ck_ppp, Lest, nsim = 99, rank = 1, glocal=TRUE)
+            L_ppp.csr <- envelope(ppp_selected, Lest, nsim = input$secondOrderSliderNsim_2, rank = 1, glocal=TRUE)
             plot(L_ppp.csr, . - r ~ r, xlab="d", ylab="L(d)-r")
         }
         #===========================================================================================
