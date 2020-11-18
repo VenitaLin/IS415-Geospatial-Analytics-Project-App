@@ -1,0 +1,209 @@
+---
+title: "Choropleth"
+author: "leeSunho"
+date: "11/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+packages = c('rgdal', 'sf', 'spdep', 'tmap', 'tidyverse', 'maptools', 'raster', 'spatstat','prettydoc','spData','sp')
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+
+```
+
+
+```{r}
+
+
+gym <- st_read(dsn = "data/geospatial/gymssg/gyms-sg.shp",
+          layer = "gyms-sg")
+
+
+
+eat <- st_read(dsn = "data/geospatial/healthier-eateries/healthier-eateries.shp",
+          layer = "healthier-eateries")
+
+
+places <- st_read(dsn = "data/geospatial/Singapore-shp/shape/places.shp",
+          layer = "places")
+
+
+mpsz <- st_read(dsn = "data/geospatial/master-plan-2014-boundary", 
+                layer = "MP14_SUBZONE_WEB_PL")
+
+
+```
+# gym
+
+```{r}
+
+mpsz_3414 <- st_set_crs(mpsz,3414)
+gym_3414 <- st_set_crs(gym,3414)
+
+mpsz_sp <- as_Spatial(mpsz_3414)
+gym_sp <- as_Spatial(gym_3414)
+
+gym_spdf <- SpatialPointsDataFrame(gym_sp,data.frame(id=1:159))
+
+
+gym_res <- over(gym_spdf, mpsz_sp)
+
+```
+
+# qtm()
+```{r}
+
+
+mpsz_gym <- left_join(mpsz, gym_res, by = c("SUBZONE_N" = "SUBZONE_N"))
+
+qtm(mpsz_gym, fill = "SUBZONE_NO.x")
+
+
+```
+
+# tmap
+
+```{r}
+tm_shape(mpsz_gym)+
+  tm_polygons("SUBZONE_NO.x")
+
+
+```
+
+# by region
+
+```{r}
+tm_shape(mpsz_gym) +
+  tm_fill("SUBZONE_NO.x",
+          style = "quantile",
+          palette = "Blues",
+          thres.poly = 0) + 
+  tm_facets(by="REGION_N.x", 
+            free.coords=TRUE, 
+            drop.shapes=TRUE) +
+  tm_layout(legend.show = FALSE,
+            title.position = c("center", "center"), 
+            title.size = 20) +
+  tm_borders(alpha = 0.5)
+
+```
+
+
+# eat
+
+```{r}
+
+mpsz_3414 <- st_set_crs(mpsz,3414)
+eat_3414 <- st_set_crs(eat,3414)
+
+mpsz_sp <- as_Spatial(mpsz_3414)
+eat_sp <- as_Spatial(eat_3414)
+
+eat_spdf <- SpatialPointsDataFrame(eat_sp,data.frame(id=1:1810))
+
+eat_res <- over(eat_spdf, mpsz_sp)
+
+```
+
+# qtm()
+```{r}
+
+
+mpsz_eat <- left_join(mpsz, eat_res, by = c("SUBZONE_N" = "SUBZONE_N"))
+
+qtm(mpsz_eat, fill = "SUBZONE_NO.x")
+
+
+```
+
+# tmap
+
+```{r}
+tm_shape(mpsz_eat)+
+  tm_polygons("SUBZONE_NO.x")
+
+
+```
+
+# by region
+
+```{r}
+tm_shape(mpsz_eat) +
+  tm_fill("SUBZONE_NO.x",
+          style = "quantile",
+          palette = "Reds",
+          thres.poly = 0) + 
+  tm_facets(by="REGION_N.x", 
+            free.coords=TRUE, 
+            drop.shapes=TRUE) +
+  tm_layout(legend.show = FALSE,
+            title.position = c("center", "center"), 
+            title.size = 20) +
+  tm_borders(alpha = 0.5)
+
+```
+
+# places
+
+```{r}
+
+mpsz_3414 <- st_set_crs(mpsz,3414)
+places_3414 <- st_set_crs(places,3414)
+
+mpsz_sp <- as_Spatial(mpsz_3414)
+places_sp <- as_Spatial(places_3414)
+
+places_spdf <- SpatialPointsDataFrame(places_sp,data.frame(id=1:184))
+
+
+places_res <- over(places_spdf, mpsz_sp)
+
+```
+
+# qtm()
+```{r}
+
+
+mpsz_places <- left_join(mpsz, places_res, by = c("SUBZONE_N" = "SUBZONE_N"))
+
+qtm(mpsz_places, fill = "SUBZONE_NO.x")
+
+
+```
+
+# tmap
+
+```{r}
+tm_shape(mpsz_places)+
+  tm_polygons("SUBZONE_NO.x")
+
+
+```
+
+# by region
+
+```{r}
+tm_shape(mpsz_places) +
+  tm_fill("SUBZONE_NO.x",
+          style = "quantile",
+          palette = "Greens",
+          thres.poly = 0) + 
+  tm_facets(by="REGION_N.x", 
+            free.coords=TRUE, 
+            drop.shapes=TRUE) +
+  tm_layout(legend.show = FALSE,
+            title.position = c("center", "center"), 
+            title.size = 20) +
+  tm_borders(alpha = 0.5)
+
+```
