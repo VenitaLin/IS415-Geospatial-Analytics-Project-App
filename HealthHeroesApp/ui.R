@@ -18,7 +18,11 @@ summaryUI <- sidebarLayout(
                       "Eateries" = "eat",
                       "Places" = "places")
         ),
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> final
     ),
     mainPanel(
         tabsetPanel(type = "tabs",
@@ -26,7 +30,11 @@ summaryUI <- sidebarLayout(
                     tabPanel("Data Table", 
                              style = "overflow-y:scroll; max-height: 400px",
                              dataTableOutput("summaryDataTable") %>% withSpinner(color="#0dc5c1")
+<<<<<<< HEAD
                              )
+=======
+                    )
+>>>>>>> final
         )
     )
 )
@@ -137,7 +145,11 @@ secondOrderUI <- sidebarLayout(
         tabsetPanel(type = "tabs",
                     id = "tabselected",
                     tabPanel("Function Estimation", value="secondOrderUITab1", plotlyOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
+<<<<<<< HEAD
                     tabPanel("Complete Spatial Randomness Test (Takes a while)", value="secondOrderUITab2", plotlyOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
+=======
+                    tabPanel("Complete Spatial Randomness Test", value="secondOrderUITab2", plotlyOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
+>>>>>>> final
         )
     )
 )
@@ -155,11 +167,18 @@ accessibilityUI <- sidebarLayout(
         ),
     ),
     mainPanel(
+<<<<<<< HEAD
         fluidRow(
             leafletOutput("accessibilityMap")
         ),
         fluidRow(
             plotlyOutput("plot2")
+=======
+        tabsetPanel(type = "tabs",
+                    id = "tabselected",
+                    tabPanel("Mapping Hansen accessibility", value="accUITab1", leafletOutput("accessibilityMap") %>% withSpinner(color="#0dc5c1")),
+                    tabPanel("Statistical graphic visualisation", value="accUITab2", plotlyOutput("accessibilityBox") %>% withSpinner(color="#0dc5c1"))
+>>>>>>> final
         )
     )
 )
@@ -180,4 +199,7 @@ shinyUI(navbarPage(
 ))
 #===================================================================================================
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> final
