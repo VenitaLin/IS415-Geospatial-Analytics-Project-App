@@ -1,0 +1,223 @@
+---
+title: "Untitled"
+author: "Lin Chih-Hsuan"
+date: "11/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+acc_gym_box <- readRDS("data/rds/acc_gym_box.rds")
+```
+
+```{r}
+acc_gym_map <- readRDS("data/rds/acc_gym_map.rds")
+```
+
+```{r}
+mpsz_st <- st_read(dsn = "data/geospatial/master-plan-2014-boundary",
+                layer = "MP14_SUBZONE_WEB_PL")
+```
+```{r}
+completeFun <- function(data, desiredCols) {
+    completeVec <- complete.cases(data[, desiredCols])
+    return(data[completeVec, ])
+}
+```
+
+
+```{r}
+gym_st <- st_read(dsn = "data/geospatial/gymssg/gyms-sg.shp",
+                  layer = "gyms-sg")
+gym_3414 <- st_set_crs(gym_st,3414)
+gym_sp_3414 <- as_Spatial(gym_3414)
+gym_hdb_dist <- read_csv("data/aspatial/gym_hdb_dis.csv", skip = 0)
+gym_as <- read_csv("data/aspatial/gym.csv", skip = 0)
+gym_spdf <- SpatialPointsDataFrame(gym_sp_3414,data.frame(id=1:159))
+gym_res <- over(gym_spdf, mpsz_sp)
+mpsz_gym <- left_join(mpsz_st, gym_res, by = c("SUBZONE_N" = "SUBZONE_N")) %>%
+    distinct_at(vars(OBJECTID.x), .keep_all = TRUE)
+filter_gym_sub <- left_join(gym_as, mpsz_gym, by = c("Id" = "OBJECTID.y")) %>%
+    distinct_at(vars(SUBZONE_NO.y), .keep_all = TRUE)
+filter_gym_sub$ADDRESSPOS <- as.character(filter_gym_sub$ADDRESSPOS)
+gym_sf <- st_as_sf(filter_gym_sub,
+                   coords = c('X', 'Y'),
+                   crs = "+init=epsg:3414")
+gym_hdb <- filter_gym_sub %>% left_join(gym_hdb_dist, by = c("Id" = "origin_id")) %>%
+    left_join(hdb, by = c("destination_id" = "id" )) %>%
+    dplyr::select(ADDRESSPOS,Y.x,X.x,SUBZONE_NO.x,SUBZONE_N,REGION_N.x,X_ADDR.x,Y_ADDR.x,network_cost,Postcode,X.y,Y.y,Latitude,Longitude,Total)
+gym_hdb$ADDRESSPOS <- as.character(gym_hdb$ADDRESSPOS)
+gym_hdb_filter2 <- gym_hdb %>%
+    dplyr::select(ADDRESSPOS,Y.x,X.x,SUBZONE_NO.x,SUBZONE_N,REGION_N.x,X_ADDR.x,Y_ADDR.x,network_cost,Postcode,X.y,Y.y,Latitude,Longitude,Total)
+```
+
+```{r}
+hdb_sf <- readRDS("data/rds/hdb_sf.rds")
+# hdb <- read_csv("data/aspatial/hdb_data.csv") %>%
+#     mutate(Total = rowSums(.[2:11]))
+# hdb$Postcode <- as.character(hdb$Postcode)
+# hdb_sf <- st_as_sf(hdb,
+#                    coords = c('X', 'Y'),
+#                    crs = "+init=epsg:3414")
+# saveRDS(hdb_sf, "data/rds/hdb_sf.rds")
+```
+
+```{r}
+gym_hdb_filter2 <- completeFun(gym_hdb_filter2, "SUBZONE_N")
+gym_hdb_filter2 <- gym_hdb_filter2 %>% left_join(hdb_sf, by = c("Postcode" = "Postcode" ))
+hdb_sf_gym <- hdb_sf %>% left_join(gym_hdb_filter2, by = c("Postcode" = "Postcode" ))
+distmat_km_gym<-as.matrix(gym_hdb_filter2$network_cost/1000)
+acc_Hansen_gym <- data.frame(ac(gym_hdb_filter2$Total,
+                                gym_hdb_filter2$`SUBZONE_NO.x`,
+                                distmat_km_gym,
+                                d0 = 30000,
+                                power = 2,
+                                family = "Hansen"))
+colnames(acc_Hansen_gym) <- "accHansen"
+acc_Hansen <- tbl_df(acc_Hansen_gym)
+hdb_Hansen_gym <- bind_cols(hdb_sf_gym, acc_Hansen_gym) %>%
+```
+
+```{r}
+hdb_hansen_gym_sub <- hdb_Hansen_gym %>%
+  dplyr::select(accHansen)
+```
+
+```{r}
+# saveRDS(gym_sf, "data/rds/gym_sf.rds")
+# saveRDS(hdb_Hansen_gym, "data/rds/hdb_hansen_gym.rds")
+hdb_hansen_gym <- readRDS("data/rds/hansen_gym.rds")
+gym_sf <- readRDS("data/rds/gym_sf.rds")
+```
+
+```{r}
+acc_gym_map <- tm_shape(gym_sf) +
+    tm_bubbles(col = "red", size=0.15, border.col="black", border.lwd=1) +
+    tm_shape(hdb_hansen_gym_sub) +
+    tm_bubbles(col = "accHansen",
+               n = 5,
+               style = "quantile",
+               size = 0.001,
+               border.col = "black",
+               border.lwd = 0.1)
+acc_gym_map
+saveRDS(acc_gym_map, "data/rds/acc_gym_map.rds")
+```
+
+
+```{r}
+hdb <- read_csv("data/aspatial/hdb_data.csv") %>%
+    mutate(Total = rowSums(.[2:11]))
+```
+
+```{r}
+mpsz_svy21 <- readRDS("data/rds/mpsz_svy21.rds")
+hdb_hansen_gym_sub_3414 <- st_transform(hdb_hansen_gym_sub, 3414)
+hdb_acc_gym <- st_join(hdb_hansen_gym_sub_3414, mpsz_svy21, join = st_intersects)
+hdb_acc_gym$log_acc <- log(hdb_acc_gym$`accHansen`)
+acc_gym_box <- ggplot(data = hdb_acc_gym,
+              aes(y = accHansen,
+                  x= REGION_N)) +
+    geom_boxplot() +
+    geom_point(stat="summary",
+               fun="mean",
+               colour ="red",
+               size=4) +
+    xlab("Region") +
+    ylab("Hansen’s accessibility values") +
+    theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+saveRDS(acc_gym_box, "data/rds/acc_gym_box.rds")
+```
+
+```{r}
+eat_st <- st_read(dsn = "data/geospatial/healthier-eateries/healthier-eateries.shp",
+                  layer = "healthier-eateries")
+eat_as <- read_csv("data/aspatial/eat.csv", skip = 0)
+eat_3414 <- st_set_crs(eat_st,3414)
+eat_sp_3414 <- as_Spatial(eat_3414)
+eat_spdf <- SpatialPointsDataFrame(eat_sp_3414,data.frame(id=1:1810))
+eat_res <- over(eat_spdf, mpsz_sp)
+mpsz_eat <- left_join(mpsz_st, eat_res, by = c("SUBZONE_N" = "SUBZONE_N"))
+filter_eat <- mpsz_eat %>%
+    distinct_at(vars(OBJECTID.x), .keep_all = TRUE)
+eat_join <- left_join(eat_as, filter_eat, by = c("Id" = "OBJECTID.y"))
+filter_eat_sub <- eat_join %>%
+    distinct_at(vars(SUBZONE_NO.y), .keep_all = TRUE)
+filter_eat_sub$ADDRESSPOS <- as.character(filter_eat_sub$ADDRESSPOS)
+eat_sf <- st_as_sf(filter_eat_sub,
+                   coords = c('X', 'Y'),
+                   crs = "+init=epsg:3414")
+eat_hdb_dist <- read_csv("data/aspatial/eat_hdb_dis.csv", skip = 0)
+eat_hdb <- filter_eat_sub %>% left_join(eat_hdb_dist, by = c("Id" = "origin_id"))
+eat_hdb <- eat_hdb %>% left_join(hdb, by = c("destination_id" = "id" ))
+eat_hdb$ADDRESSPOS <- as.character(eat_hdb$ADDRESSPOS)
+eat_hdb_filter2 <- eat_hdb %>%
+    dplyr::select(ADDRESSPOS,Y.x,X.x,SUBZONE_NO.x,SUBZONE_N,REGION_N.x,X_ADDR.x,Y_ADDR.x,network_cost,Postcode,X.y,Y.y,Latitude,Longitude,Total)
+eat_hdb_filter2 <- completeFun(eat_hdb_filter2, "SUBZONE_N")
+eat_hdb_filter2 <- eat_hdb_filter2 %>% left_join(hdb_sf, by = c("Postcode" = "Postcode" ))
+hdb_sf_eat <- hdb_sf %>% left_join(eat_hdb_filter2, by = c("Postcode" = "Postcode" ))
+distmat_km_eat<-as.matrix(eat_hdb_filter2$network_cost/1000)
+acc_Hansen_eat <- data.frame(ac(eat_hdb_filter2$Total,
+                                eat_hdb_filter2$`SUBZONE_NO.x`,
+                                distmat_km_eat,
+                                d0 = 30000,
+                                power = 2,
+                                family = "Hansen"))
+colnames(acc_Hansen_eat) <- "accHansen"
+acc_Hansen <- tbl_df(acc_Hansen_eat)
+hdb_Hansen_eat <- bind_cols(hdb_sf_eat, acc_Hansen_eat)
+```
+
+```{r}
+hdb_hansen_eat_sub <- hdb_Hansen_eat %>%
+  dplyr::select(accHansen)
+```
+
+```{r}
+eat_sf <- readRDS("data/rds/eat_sf.rds")
+acc_eat_map <- tm_shape(eat_sf) +
+    tm_bubbles(col = "blue", size=0.15, border.col="black", border.lwd=1) +
+    tm_shape(hdb_hansen_eat_sub) +
+    tm_bubbles(col = "accHansen",
+               n = 5,
+               style = "quantile",
+               size = 0.001,
+               border.col = "black",
+               border.lwd = 0.1)
+saveRDS(acc_eat_map, "data/rds/acc_eat_map.rds")
+```
+
+```{r}
+hdb_hansen_eat_sub_3414 <- st_transform(hdb_hansen_eat_sub, 3414)
+hdb_acc_eat <- st_join(hdb_hansen_eat_sub_3414, mpsz_svy21, join = st_intersects)
+hdb_acc_eat$log_acc <- log(hdb_acc_eat$`accHansen`)
+acc_eat_box <- ggplot(data = hdb_acc_eat,
+                      aes(y = accHansen,
+                          x= REGION_N)) +
+    geom_boxplot() +
+    geom_point(stat="summary",
+               fun="mean",
+               colour ="red",
+               size=4) +
+    xlab("Region") +
+    ylab("Hansen’s accessibility values") +
+    theme(axis.text.x = element_text(angle = 30))
+saveRDS(acc_eat_box, "data/rds/acc_eat_box.rds")
+```
+
+
+
+
+
