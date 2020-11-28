@@ -22,34 +22,15 @@ summaryUI <- sidebarLayout(
     ),
     mainPanel(
         tabsetPanel(type = "tabs",
+                    tabPanel("Point Map", leafletOutput("summaryPointMap") %>% withSpinner(color="#0dc5c1")),
                     tabPanel("Data Table", 
                              style = "overflow-y:scroll; max-height: 400px",
                              dataTableOutput("summaryDataTable") %>% withSpinner(color="#0dc5c1")
-                             ),
-                    tabPanel("Point Map", leafletOutput("summaryPointMap") %>% withSpinner(color="#0dc5c1"))
+                             )
         )
     )
 )
 #===================================================================================================
-
-
-# CHOROPLETH
-#===================================================================================================
-choroplethUI <- sidebarLayout(
-    sidebarPanel(
-        selectInput("chloroplethMapSelectAmenity",
-                    "Amenity Type:",
-                    c("Gyms" = "gym",
-                      "Eateries" = "eat",
-                      "Places" = "places")
-        ),  
-    ),
-    mainPanel(
-        leafletOutput("choroplethMap") %>% withSpinner(color="#0dc5c1")
-    )
-)
-#===================================================================================================
-
 
 
 # KERNEL DENSITY
@@ -155,8 +136,8 @@ secondOrderUI <- sidebarLayout(
     mainPanel(
         tabsetPanel(type = "tabs",
                     id = "tabselected",
-                    tabPanel("Function Estimation", value="secondOrderUITab1", plotOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
-                    tabPanel("Complete Spatial Randomness Test (Takes a while)", value="secondOrderUITab2", plotOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
+                    tabPanel("Function Estimation", value="secondOrderUITab1", plotlyOutput("secondOrderEstimationPlot") %>% withSpinner(color="#0dc5c1")),
+                    tabPanel("Complete Spatial Randomness Test (Takes a while)", value="secondOrderUITab2", plotlyOutput("secondOrderCompleteSpatRandPlot") %>% withSpinner(color="#0dc5c1"))
         )
     )
 )
@@ -167,16 +148,19 @@ secondOrderUI <- sidebarLayout(
 #===================================================================================================
 accessibilityUI <- sidebarLayout(
     sidebarPanel(
-        sliderInput("accessibiltyMetersSlider",
-                    "Year:",
-                    min = 50,
-                    max = 2500,
-                    value = 100,
-                    ticks = T
+        selectInput("accSelectAmenity", 
+                    "Amenity Type:",
+                    c("Gyms" = "gym",
+                      "Eateries" = "eat")
         ),
     ),
     mainPanel(
-        leafletOutput("accessibilityMap")
+        fluidRow(
+            leafletOutput("accessibilityMap")
+        ),
+        fluidRow(
+            plotlyOutput("plot2")
+        )
     )
 )
 #===================================================================================================
@@ -190,7 +174,6 @@ shinyUI(navbarPage(
     "HealthHeroes",
     theme = shinytheme("yeti"),
     tabPanel(title = "Data", value = "summary", summaryUI),
-    tabPanel(title = "Choropleth Mapping", value = "choropleth", choroplethUI),
     tabPanel(title = "First Order Analysis", value = "kernelDensity", kernelDensityUI),
     tabPanel(title = "Second Order Analysis", value = "secondOrder", secondOrderUI),
     tabPanel(title = "Accessibility Analysis", value = "accessibility", accessibilityUI)

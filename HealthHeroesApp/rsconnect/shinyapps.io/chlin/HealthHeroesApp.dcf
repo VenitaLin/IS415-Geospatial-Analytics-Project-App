@@ -1,0 +1,12 @@
+name: HealthHeroesApp
+title: HealthHeroesApp
+username:
+account: chlin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3282985
+bundleId: 3914492
+url: https://chlin.shinyapps.io/HealthHeroesApp/
+when: 1606525645.26268
+asMultiple: FALSE
+asStatic: FALSE
