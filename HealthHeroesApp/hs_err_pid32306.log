@@ -1,0 +1,69 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00000001079f3090, pid=32306, tid=775
+#
+# JRE version: Java(TM) SE Runtime Environment (12.0.2+10) (build 12.0.2+10)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (12.0.2+10, mixed mode, sharing, tiered, compressed oops, g1 gc, bsd-amd64)
+# Problematic frame:
+# C  [rsession+0x4a090]
+#
+# No core dump will be written. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.java.com/bugreport/crash.jsp
+# The crash happened outside the Java Virtual Machine in native code.
+# See problematic frame for where to report the bug.
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Djava.awt.headless=true -Xmx512m -Xrs vfprintf exit -Xss2m 
+
+Host: MacBookPro11,5 x86_64 2500 MHz, 8 cores, 16G, Darwin 19.6.0
+Time: Sun Nov 29 18:03:30 2020 +08 elapsed time: 52960 seconds (0d 14h 42m 40s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007fcfed9ba000):  JavaThread "main" [_thread_in_native, id=775, stack(0x00007ffee7a57000,0x00007ffee8257000)]
+
+Stack: [0x00007ffee7a57000,0x00007ffee8257000],  sp=0x00007ffee8246d30,  free space=8127k
+Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [rsession+0x4a090]
+C  [rsession+0x49f3f]
+C  [rsession+0x49e37]
+C  [rsession+0x49b4f]
+C  [rsession+0x941baa]  _ZN13rstudio_boost4asio6detail24descriptor_write_op_baseINS0_15const_buffers_1EE10do_performEPNS1_10reactor_opE+0x100b6a
+C  [rsession+0x90f700]  _ZN13rstudio_boost4asio6detail24descriptor_write_op_baseINS0_15const_buffers_1EE10do_performEPNS1_10reactor_opE+0xce6c0
+C  [rsession+0x9113f1]  _ZN13rstudio_boost4asio6detail24descriptor_write_op_baseINS0_15const_buffers_1EE10do_performEPNS1_10reactor_opE+0xd03b1
+C  [rsession+0x8fbbfc]  _ZN13rstudio_boost4asio6detail24descriptor_write_op_baseINS0_15const_buffers_1EE10do_performEPNS1_10reactor_opE+0xbabbc
+C  [rsession+0x15b02a]  _ZN13rstudio_boost4asio6detail30reactive_socket_accept_op_baseINS0_12basic_socketINS0_2ip3tcpEEES5_E10do_performEPNS1_10reactor_opE+0x96c0a
+C  [rsession+0x171ecb]  _ZN13rstudio_boost4asio6detail30reactive_socket_accept_op_baseINS0_12basic_socketINS0_2ip3tcpEEES5_E10do_performEPNS1_10reactor_opE+0xadaab
+C  [rsession+0x104855]  _ZN13rstudio_boost4asio6detail30reactive_socket_accept_op_baseINS0_12basic_socketINS0_2ip3tcpEEES5_E10do_performEPNS1_10reactor_opE+0x40435
+C  [rsession+0x8de372]  _ZN13rstudio_boost4asio6detail24descriptor_write_op_baseINS0_15const_buffers_1EE10do_performEPNS1_10reactor_opE+0x9d332
+C  [libR.dylib+0x207057]  R_ProcessEvents+0x37
+C  [libR.dylib+0xafeed]  R_CheckUserInterrupt+0x4d
+C  [libR.dylib+0x7220d]  R_ToplevelExec+0x27d
+C  [later.so+0x106a1]  _ZNK16CallbackRegistry4waitEdb+0x191
+C  [later.so+0x15a22]  _Z13execCallbacksdbi+0x42
+C  [later.so+0x504d]  _later_execCallbacks+0x7d
+C  [libR.dylib+0x86642]  R_doDotCall+0x5b2
+C  [libR.dylib+0x87fde]  do_dotcall+0x14e
+C  [libR.dylib+0xbfb98]  bcEval+0x71f8
+C  [libR.dylib+0xb8261]  Rf_eval+0x181
+C  [libR.dylib+0xd8791]  R_execClosure+0x891
+C  [libR.dylib+0xd7569]  Rf_applyClosure+0x1d9
+C  [libR.dylib+0xbf448]  bcEval+0x6aa8
+C  [libR.dylib+0xb8261]  Rf_eval+0x181
+C  [libR.dylib+0xd8791]  R_execClosure+0x891
+C  [libR.dylib+0xd7569]  Rf_applyClosure+0x1d9
+C  [libR.dylib+0xbf448]  bcEval+0x6aa8
+C  [libR.dylib+0xb8261]  Rf_eval+0x181
+C  [libR.dylib+0xd8791]  R_execClosure+0x891
+C  [libR.dylib+0xd7569]  Rf_applyClosure+0x1d9
+C  [libR.dylib+0xbf448]  bcEval+0x6aa8
+C  [libR.dylib+0xb8261]  Rf_eval+0x181
+C  [libR.dylib+0xd8791]  R_execClosure+0x891
+C  [libR.dylib+0xd7569]  Rf_applyClosure+0x1d9
+C  [libR.dylib+0xbf448]  bcEval+0x6aa8
+C  [libR.dylib+0xb8261]  Rf_eval+0x181

@@ -156,9 +156,8 @@ accessibilityUI <- sidebarLayout(
     ),
     mainPanel(
         tabsetPanel(type = "tabs",
-                    id = "tabselected",
-                    tabPanel("Mapping Hansen accessibility", value="accUITab1", leafletOutput("accessibilityMap") %>% withSpinner(color="#0dc5c1")),
-                    tabPanel("Statistical graphic visualisation", value="accUITab2", plotlyOutput("accessibilityBox") %>% withSpinner(color="#0dc5c1"))
+                    tabPanel("Mapping Hansen accessibility", leafletOutput("accessibilityMap") %>% withSpinner(color="#0dc5c1")),
+                    tabPanel("Statistical graphic visualisation", plotlyOutput("accessibilityBox") %>% withSpinner(color="#0dc5c1"))
         )
     )
 )

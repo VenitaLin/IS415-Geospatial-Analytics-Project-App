@@ -16,8 +16,6 @@ library('DT')
 library("tmaptools")
 library("ggthemes")
 library("ggplot2")
-library("plotly")
-library("sf")
 #===================================================================================================
 
 # COASTAL OUTLINE
@@ -54,6 +52,7 @@ gym_sf <- readRDS("data/rds/gym_sf.rds")
 eat <- readRDS("data/rds/eat.rds")
 eat_ppp <- readRDS("data/rds/eat_ppp.rds")
 eat_sf <- readRDS("data/rds/eat_sf.rds")
+hdb_hansen_eat_sub <- readRDS("data/rds/hdb_hansen_eat_sub.rds")
 #===================================================================================================
 
 
@@ -394,5 +393,6 @@ shinyServer(function(input, output, session) {
         ggplotly(acc_box)
     })
     #===============================================================================================
+    
     
 })

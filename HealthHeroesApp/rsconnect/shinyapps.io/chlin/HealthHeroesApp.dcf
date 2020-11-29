@@ -5,8 +5,9 @@ account: chlin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3282985
-bundleId: 3914492
+bundleId: 3919082
 url: https://chlin.shinyapps.io/HealthHeroesApp/
-when: 1606525645.26268
+when: 1606657405.86805
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: backup.Rmd
